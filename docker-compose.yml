@@ -1,0 +1,43 @@
+version: '3'
+services:
+  amqp:
+    restart: always
+    hostname: amqp
+    image: rabbitmq
+    container_name: amqp
+    ports:
+      - "5673:5672"
+
+  flask:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask
+    restart: unless-stopped
+
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - .:/app
+    depends_on:
+      - flask
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginxDockerfile
+    container_name: nginx-container
+    ports:
+      - "80:80"
+
+  celery:
+    build:
+      context: .
+      dockerfile: celeryDockerfile
+    container_name: celery
+    depends_on:
+      - amqp
+      - flask
